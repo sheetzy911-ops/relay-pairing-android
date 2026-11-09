@@ -40,6 +40,10 @@ The new Kotlin bridge preserves the original APK’s HTTP contract:
 
 `SmsStatusReceiver` converts Android sent/delivery callbacks into relay events. HTTP 401 clears the encrypted pairing, and an event HTTP 404 is treated as terminal success to match the original client.
 
+## Persistent heartbeat monitoring
+
+After successful pairing, `HeartbeatMonitorService` starts as an Android foreground service. It displays an ongoing low-priority notification and posts a heartbeat every 15 minutes while the app is minimized. `SmsBridgeScheduler` also registers `HeartbeatWorker` as a WorkManager fallback for cases where Android stops or recreates the service. The service stops automatically if pairing is revoked or cleared.
+
 ## Firebase setup
 
 The project includes the Firebase Messaging service dependency and manifest declaration, but Firebase credentials are intentionally not committed. Add the Firebase Android configuration for the application ID `com.httpsms.pairing` before expecting FCM delivery. The relay should send data messages containing either:
@@ -56,7 +60,7 @@ or:
 
 ## Runtime permissions
 
-Request `SEND_SMS`, `READ_PHONE_STATE`, and `READ_PHONE_NUMBERS` at runtime before using the bridge. The pairing screen itself does not request these permissions yet; the production integration should request them from the app’s main bridge screen and explain why they are required.
+The app requests notification permission on Android 13+ and the bridge integration must request `SEND_SMS`, `READ_PHONE_STATE`, and `READ_PHONE_NUMBERS` at runtime before using SMS or phone-number heartbeat reporting. Users should keep the foreground-service notification enabled; battery optimization exceptions may be needed on aggressive OEM Android builds.
 
 ## Deliberate migration boundaries
 

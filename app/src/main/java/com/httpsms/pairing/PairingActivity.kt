@@ -1,5 +1,8 @@
 package com.httpsms.pairing
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
@@ -35,6 +38,11 @@ class PairingActivity : ComponentActivity() {
         storage = SecureStorageManager(this)
         api = RelayApiClient(storage)
         setContentView(buildContentView())
+
+        if (storage.isPaired) startHeartbeatMonitoring()
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        }
 
         relayUrlInput.setText(intent.getStringExtra(EXTRA_RELAY_URL).orEmpty())
         labelInput.setText(intent.getStringExtra(EXTRA_DEVICE_LABEL).orEmpty())
@@ -104,6 +112,7 @@ class PairingActivity : ComponentActivity() {
                     api.activatePairing(relayUrl, code, deviceKey)
                 }
                 status.text = "Paired as ${activated.label ?: labelInput.text.toString().ifBlank { "Android bridge" }}."
+                startHeartbeatMonitoring()
                 setResult(RESULT_OK)
                 finish()
             } catch (error: RelayApiClient.RelayApiException) {
@@ -136,8 +145,14 @@ class PairingActivity : ComponentActivity() {
         status.text = message
     }
 
+    private fun startHeartbeatMonitoring() {
+        HeartbeatMonitorService.start(this)
+        SmsBridgeScheduler.scheduleHeartbeatFallback(this)
+    }
+
     companion object {
         const val EXTRA_RELAY_URL = "relay_url"
         const val EXTRA_DEVICE_LABEL = "device_label"
+        private const val REQUEST_NOTIFICATIONS = 4102
     }
 }

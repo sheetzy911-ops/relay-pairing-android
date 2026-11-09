@@ -5,11 +5,26 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
+import androidx.work.PeriodicWorkRequest
+import java.util.concurrent.TimeUnit
 import androidx.work.WorkManager
 
 private fun timestamp(): String = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", java.util.Locale.US).format(java.util.Date())
 
 object SmsBridgeScheduler {
+    fun scheduleHeartbeatFallback(context: Context) {
+        val request = PeriodicWorkRequest.Builder(
+            HeartbeatWorker::class.java,
+            15,
+            TimeUnit.MINUTES
+        ).setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build()
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "relay-heartbeat-fallback",
+            androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
+            request
+        )
+    }
+
     fun enqueueOutstanding(context: Context, messageId: String) {
         val request = OneTimeWorkRequest.Builder(SmsBridgeWorker::class.java)
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
