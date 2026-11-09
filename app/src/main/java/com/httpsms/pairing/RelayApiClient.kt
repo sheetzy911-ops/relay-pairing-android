@@ -95,6 +95,24 @@ class RelayApiClient(
             .build()
     }
 
+    /** Executes an authenticated request and clears pairing on HTTP 401. */
+    @Throws(IOException::class)
+    internal fun <T> execute(
+        request: Request,
+        treatNotFoundAsSuccess: Boolean = false,
+        parser: (String) -> T
+    ): T? {
+        httpClient.newCall(request).execute().use { response ->
+            if (response.code == 401) handleAuthenticationFailure(response.code)
+            if (response.code == 404 && treatNotFoundAsSuccess) return parser("")
+            val body = response.body?.string().orEmpty()
+            if (!response.isSuccessful) {
+                throw RelayApiException(response.code, "Relay request failed with HTTP ${response.code}")
+            }
+            return parser(body)
+        }
+    }
+
     /**
      * Call this when any authenticated bridge request receives HTTP 401.
      * A revoked key must not be retried indefinitely.
