@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relay Pairing Android</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, system-ui, sans-serif; color: #17233a; background: #f4f7fb; }
+    body { max-width: 760px; margin: 0 auto; padding: 48px 20px; }
+    main { background: white; border: 1px solid #dbe3ef; border-radius: 18px; padding: 32px; box-shadow: 0 12px 36px #203b6812; }
+    h1 { margin-top: 0; } h2 { margin-top: 32px; font-size: 20px; }
+    .button { display: inline-block; padding: 12px 18px; border-radius: 10px; color: white; background: #2457d6; text-decoration: none; font-weight: 700; }
+    code { background: #eef2f8; padding: 2px 5px; border-radius: 5px; } pre { background: #111827; color: #dbeafe; padding: 16px; border-radius: 10px; overflow: auto; }
+    li { margin: 10px 0; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Relay Pairing Android</h1>
+  <p>Installable Android bridge shell for pairing with the secure SMS relay used by the Relay Desk web console.</p>
+  <p><a class="button" href="./relay-pairing-debug.apk">Download debug APK</a></p>
+  <h2>Pairing steps</h2>
+  <ol>
+    <li>Install the APK on the authorized Android device.</li>
+    <li>In the relay administrator session, call <code>POST /auth/pairings</code> and copy the one-time code and device key.</li>
+    <li>Open the APK and enter the relay HTTPS URL, pairing code, and device key.</li>
+    <li>After activation, the APK stores the device key using Android Keystore-backed encrypted storage.</li>
+    <li>Configure the SMS web console with the same relay URL and administrator login.</li>
+  </ol>
+  <h2>Security</h2>
+  <p>The device key is never placed in this page or in a URL. Use HTTPS for the relay, keep the pairing code private, and revoke the device if the phone is lost.</p>
+  <h2>Relay request</h2>
+  <pre>POST /v1/pairing/activate
+Content-Type: application/json
+
+{"pairing_code":"...","device_key":"..."}</pre>
+  <p><a href="https://sheetzy911-ops.github.io/relay-desk-sms/">Open the SMS web console</a></p>
+</main>
+</body>
+</html>
